@@ -1,0 +1,11 @@
+name: Storyline
+main: ru.hofwq.storyline.Storyline
+version: 1.1 alpha
+author: hofwq
+api-version: 1.16
+
+commands:
+  setstorylevel:
+    description: Выставить определенный уровень сюжета.
+    usage: /setstorylevel [Player] [Level]
+    aliases: [setstorylvl, setstlvl]
