@@ -36,7 +36,7 @@ public class ClearEnderChest implements CommandExecutor{
 		return true;
 	}
 	
-	public Player getPlayer(String nickname) {
+	private Player getPlayer(String nickname) {
 	    Player player = (Player) Bukkit.getOnlinePlayers();
 
 	    if (player.getName().toLowerCase().startsWith(nickname.toLowerCase())) {
