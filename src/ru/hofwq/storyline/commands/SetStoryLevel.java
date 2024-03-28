@@ -23,7 +23,7 @@ public class SetStoryLevel implements CommandExecutor{
 		Player player;
 		int newStorylineLevel;
 
-		if(args.length < 1 || args.length > 2) {
+		if(!(args.length >= 1 && args.length <= 2)) {
 			sender.sendMessage(Storyline.WRONG_ARGUMENTS);
 			return true;
 		}

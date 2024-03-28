@@ -20,10 +20,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -36,14 +39,15 @@ import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
 
 public class EventListener implements Listener{
-	Storyline plugin = Storyline.getPlugin();
-	List<UUID> playersToGoOutside = new ArrayList<>();
-	List<UUID> playersInBlackRoom = new ArrayList<>();
-	List<UUID> playersWhoTakedKeys = new ArrayList<>();
-	HashMap<UUID, Integer> playerMessageCount = new HashMap<>();
-	HashMap<UUID, ItemStack[]> playerInventories = new HashMap<>();
-	HashMap<Block, Boolean> doorStates = new HashMap<>();
-	
+	public static Storyline plugin = Storyline.getPlugin();
+	public static List<UUID> playersToGoOutside = new ArrayList<>();
+	public static List<UUID> playersInBlackRoom = new ArrayList<>();
+	public static List<UUID> playersWhoTakedKeys = new ArrayList<>();
+	public static List<UUID> playersWithLoadedPack = new ArrayList<>();
+	public static HashMap<UUID, Integer> playerMessageCount = new HashMap<>();
+	public static HashMap<UUID, ItemStack[]> playerInventories = new HashMap<>();
+	public static HashMap<Block, Boolean> doorStates = new HashMap<>();
+
 	int semyonRoomX = plugin.getConfig().getInt("semyonRoom.X");
 	int semyonRoomY = plugin.getConfig().getInt("semyonRoom.Y");
 	int semyonRoomZ = plugin.getConfig().getInt("semyonRoom.Z");
@@ -51,15 +55,7 @@ public class EventListener implements Listener{
 	int blackRoomX = plugin.getConfig().getInt("blackRoom.X");
 	int blackRoomY = plugin.getConfig().getInt("blackRoom.Y");
 	int blackRoomZ = plugin.getConfig().getInt("blackRoom.Z");
-	
-	int dangerZoneX = plugin.getConfig().getInt("dangerZone.X");
-	int dangerZoneY = plugin.getConfig().getInt("dangerZone.Y");
-	int dangerZoneZ = plugin.getConfig().getInt("dangerZone.Z");
-	
-	int devyatochkaX = plugin.getConfig().getInt("devyatochka.X");
-	int devyatochkaY = plugin.getConfig().getInt("devyatochka.Y");
-	int devyatochkaZ = plugin.getConfig().getInt("devyatochka.Z");
-	
+
 	int keyLocationX = plugin.getConfig().getInt("keyLocation.X");
 	int keyLocationY = plugin.getConfig().getInt("keyLocation.Y");
 	int keyLocationZ = plugin.getConfig().getInt("keyLocation.Z");
@@ -71,8 +67,8 @@ public class EventListener implements Listener{
 	@EventHandler
 	public void onLogin(LoginEvent e) {
 		Player player = e.getPlayer();
-        
-        if (!AuthMeApi.getInstance().isAuthenticated(player)) {
+		
+		if (!AuthMeApi.getInstance().isAuthenticated(player)) {
         	return;
         }
         
@@ -97,40 +93,58 @@ public class EventListener implements Listener{
         
         semyonRoom.setYaw(yaw);
         semyonRoom.setPitch(pitch);
-        
+    
         if(playerConfig.getInt("storylineLevel") == 0) {
-        	saveInventory(player);
-        	player.teleport(semyonRoom); //2877 58 3002
-        	player.setPlayerTime(18000, false);
-        	
-        	for(Player p : Bukkit.getOnlinePlayers()) {
-        		p.hidePlayer(plugin, player);
-        		player.hidePlayer(plugin, p);
-        	}
-        	
-        	sendDelayedMessage(player, ChatColor.YELLOW + "Я сидел дома шестые сутки, смотрел в монитор, читая новые треды на форуме несколько часов подряд.", 0);
-        	sendDelayedMessage(player, "", 0);
-        	sendDelayedMessage(player, ChatColor.YELLOW + "Сейчас все обсуждали новое аниме под названием \"Советский мир\", в котором действия происходят в мире, в котором ещё не распался советский союз, в который попадает главный герой.", 6);
-        	sendDelayedMessage(player, "", 6);
-        	sendDelayedMessage(player, ChatColor.YELLOW + "Мне не особо нравились аниме подобного жанра, в которых гг попадает в альтернативные миры, ведь того, что происходит в этих аниме, никак не может произойти в жизни...", 12);
-        	sendDelayedMessage(player, "", 12);
-        	sendDelayedMessage(player, ChatColor.YELLOW + "Пора бы уже выйти на улицу, сходить в магазин...", 18);
-        	sendDelayedMessage(player, "", 18);
-        	sendDelayedMessage(player, ChatColor.YELLOW + "А то так и помру с голода..", 24);
-        	sendDelayedMessage(player, "", 24);
-        	
-        	int delaySeconds = 25;
+        	int delaySeconds = 2;
         	int delayTicks = delaySeconds * 20;
         	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
         		@Override
         		public void run() {
-        			playersToGoOutside.add(player.getUniqueId());
+        			saveInventory(player);
+        			player.teleport(semyonRoom); //2877 58 3002
+        			player.setPlayerTime(18000, false);
+        			
+        			for(Player p : Bukkit.getOnlinePlayers()) {
+        				p.hidePlayer(plugin, player);
+        				player.hidePlayer(plugin, p);
+        			}
+        			
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Я сидел дома шестые сутки, смотрел в монитор, читая новые треды на форуме несколько часов подряд.", 0);
+        			sendDelayedMessage(player, "", 0);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Сейчас все обсуждали новое аниме под названием \"Советский мир\", в котором действия происходят в мире, в котором ещё не распался советский союз, в который попадает главный герой.", 5);
+        			sendDelayedMessage(player, "", 5);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Мне не особо нравились аниме подобного жанра, в которых гг попадает в альтернативные миры, ведь того, что происходит в этих аниме, никак не может произойти в жизни...", 11);
+        			sendDelayedMessage(player, "", 11);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Пора бы уже выйти на улицу, сходить в магазин...", 15);
+        			sendDelayedMessage(player, "", 15);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "А то так и помру с голода..", 18);
+        			sendDelayedMessage(player, "", 18);
+        			
+        			int delaySeconds = 25;
+        			int delayTicks = delaySeconds * 20;
+        			Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+        				@Override
+        				public void run() {
+        					playersToGoOutside.add(player.getUniqueId());
+        				}
+        			}, delayTicks);
+        			
+        			sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", 25);
+        			sendDelayedMessage(player, "", 25);
         		}
         	}, delayTicks);
         	
-        	sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", 25);
-        	sendDelayedMessage(player, "", 25);
         }
+	}
+	
+	@EventHandler
+	public void onResourcePackLoad(PlayerResourcePackStatusEvent e) {
+		Player player = e.getPlayer();
+
+		if(e.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) {
+	        playersWithLoadedPack.add(player.getUniqueId());
+	        plugin.log.info(player.getName() + " successfully loaded resourcepack");
+	    }
 	}
 	
 	@EventHandler
@@ -146,42 +160,12 @@ public class EventListener implements Listener{
 	}
 	
 	@EventHandler
-	public void onPlayerLeave(PlayerQuitEvent e) {
-		Player player = e.getPlayer();
-		
-		FileConfiguration playerConfig = getPlayerConfiguration(player);
-		
-		if(playerConfig.getInt("storylineLevel") == 0) {
-			for(Player p : Bukkit.getOnlinePlayers()) {
-				p.showPlayer(plugin, player);
-        		player.showPlayer(plugin, p);
-        	}
-			
-			player.removePotionEffect(PotionEffectType.BLINDNESS);
-	        player.removePotionEffect(PotionEffectType.SLOW);
-	        player.resetPlayerTime();
-	        restoreInventory(player);
-	        
-	        playersToGoOutside.remove(player.getUniqueId());
-	        playersInBlackRoom.remove(player.getUniqueId());
-	        playersWhoTakedKeys.remove(player.getUniqueId());
-	        playerMessageCount.remove(player.getUniqueId());
-	        
-	        plugin.log.info(player.getName() + " exits without completed story");
-		}
-	}
-	
-	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e) {
 		Player player = e.getPlayer();
 		
 		FileConfiguration playerConfig = getPlayerConfiguration(player);
-		File playerFile = getPlayerFile(player);
 		
 		Location enterLocation = new Location(player.getWorld(), enterLocationX, enterLocationY, enterLocationZ);
-		Location devyatochkaLocation = new Location(player.getWorld(), devyatochkaX, devyatochkaY, devyatochkaZ);
-		Location dangerZoneLocation = new Location(player.getWorld(), dangerZoneX, dangerZoneY, dangerZoneZ);
-		Location blackRoom = new Location(player.getWorld(), blackRoomX, blackRoomY, blackRoomZ);
 		
 		if(!playersToGoOutside.contains(player.getUniqueId()) && playerConfig.getInt("storylineLevel") == 0) {
 			e.setCancelled(true);
@@ -191,36 +175,7 @@ public class EventListener implements Listener{
 		        sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду пару минут до пешеходного перехода, после перехода которого останется совсем немного до Пятёрочки.", 0);
 		        sendDelayedMessage(player, "", 0);
 		        playerMessageCount.put(player.getUniqueId(), 1);
-		    } else if(player.getLocation().distance(dangerZoneLocation) >= 75) {
-		        player.sendMessage(ChatColor.RED + "Во время пролога вы не можете уходить далеко от места событий!");
-		        player.teleport(enterLocation);
-		    } else if(player.getLocation().distance(devyatochkaLocation) <= 14 && (!playerMessageCount.containsKey(player.getUniqueId()) || playerMessageCount.get(player.getUniqueId()) < 2)) {
-		        sendDelayedMessage(player, ChatColor.YELLOW + "Я начинаю переходить дорогу и...", 0);
-		        sendDelayedMessage(player, "", 0);
-		        playerMessageCount.put(player.getUniqueId(), 2);
-
-		        givePotionEffect(player, PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 0);
-		        givePotionEffect(player, PotionEffectType.SLOW, Integer.MAX_VALUE, 0);
-
-	        	//playsound avtobus
-
-	        	playersInBlackRoom.add(player.getUniqueId());
-	        	
-	        	int delaySeconds = 0;
-	        	int delayTicks = delaySeconds * 20;
-	        	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-	        		@Override
-	        		public void run() {
-	        			player.teleport(blackRoom);
-	        		}
-	        	}, delayTicks);
-	        	
-	        	
-	        	sendDelayedMessage(player, ChatColor.YELLOW + "Автобус врезается в меня.", 3);
-	        	sendDelayedMessage(player, "", 3);
-	    	    
-	        	newLevelAnnouncement(player, playerFile, playerConfig, 6);
-			}
+		    }
 		}
 		
 		if(playersInBlackRoom.contains(player.getUniqueId())) {
@@ -231,6 +186,14 @@ public class EventListener implements Listener{
 	
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {
+		if(playersToGoOutside.contains(e.getPlayer().getUniqueId())) {
+			e.setCancelled(true);
+			return;
+		}
+	}
+	
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent e) {
 		if(playersToGoOutside.contains(e.getPlayer().getUniqueId())) {
 			e.setCancelled(true);
 			return;
@@ -294,9 +257,8 @@ public class EventListener implements Listener{
 				}
 			}
 		}
-		
 	}
-	
+
 	private void closeDoorAfter(Block door, int delaySeconds) {
 	    int delayTicks = delaySeconds * 20;
 	    
@@ -315,7 +277,8 @@ public class EventListener implements Listener{
 	        }
 	    }, delayTicks);
 	}
-	private void givePotionEffect(Player player, PotionEffectType effect, int time, int delaySeconds) {
+	
+	public static void givePotionEffect(Player player, PotionEffectType effect, int time, int delaySeconds) {
 	    int delayTicks = delaySeconds * 20;
 	    
 	    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -326,12 +289,12 @@ public class EventListener implements Listener{
 	    }, delayTicks);
 	}
 	
-	private void sendDelayedMessage(Player player, String message, int delaySeconds) {
+	public static void sendDelayedMessage(Player player, String message, int delaySeconds) {
         int delayTicks = delaySeconds * 20;
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
     }
 	
-	private void newLevelAnnouncement(Player player, File playerFile, FileConfiguration playerConfig, int delaySeconds) {
+	public static void newLevelAnnouncement(Player player, File playerFile, FileConfiguration playerConfig, int delaySeconds) {
 		new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -339,40 +302,92 @@ public class EventListener implements Listener{
 					playerConfig.set("storylineLevel", 1);
 				}
 		        saveConfig(playerFile, playerConfig);
-		        player.removePotionEffect(PotionEffectType.BLINDNESS);
-		        player.removePotionEffect(PotionEffectType.SLOW);
-		        player.resetPlayerTime();
-		        
+
 		        Location busStop = new Location(player.getWorld(), 2753, 36, 2947);
+		        
+		        for(Player p : Bukkit.getOnlinePlayers()) {
+					p.showPlayer(plugin, player);
+					player.showPlayer(plugin, p);
+				}
+				
+				player.removePotionEffect(PotionEffectType.BLINDNESS);
+				player.removePotionEffect(PotionEffectType.SLOW);
+				player.resetPlayerTime();
+				
+				restoreInventory(player);
+				
+				playersToGoOutside.remove(player.getUniqueId());
+		        playersInBlackRoom.remove(player.getUniqueId());
+		        playersWhoTakedKeys.remove(player.getUniqueId());
+		        playerMessageCount.remove(player.getUniqueId());
+		        playersWithLoadedPack.remove(player.getUniqueId());
 		        
 		        player.teleport(busStop);
 		        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
 		        player.sendMessage(ChatColor.GREEN + "Вы перешли на новый уровень " + playerConfig.getInt("storylineLevel"));
-		        
-		        for(Player p : Bukkit.getOnlinePlayers()) {
-					p.showPlayer(plugin, player);
-	        		player.showPlayer(plugin, p);
-	        	}
-		        
-		        restoreInventory(player);
-		        
-		        playersToGoOutside.remove(player.getUniqueId());
-		        playersInBlackRoom.remove(player.getUniqueId());
-		        playersWhoTakedKeys.remove(player.getUniqueId());
-		        playerMessageCount.remove(player.getUniqueId());
 			}
 		}.runTaskLater(plugin, delaySeconds * 20);
-
 	}
 	
-	public void saveInventory(Player player) {
+	@EventHandler
+	public void onPluginDisable(PluginDisableEvent e) {
+		if(e.getPlugin().getName().equals("Storyline")) {
+			for(Player player : Bukkit.getOnlinePlayers()) {
+				resetPlayerState(player);
+				FileConfiguration playerConfig = getPlayerConfiguration(player);
+				
+				if(playerConfig.getInt("storylineLevel") == 0) {
+					player.sendMessage(ChatColor.RED + "The plugin has been disabled. Try to reconnect to the server, if the plugin does not work, report it to the administration.");
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerLeave(PlayerQuitEvent e) {
+		Player player = e.getPlayer();
+		FileConfiguration playerConfig = getPlayerConfiguration(player);
+		
+		resetPlayerState(player);
+		
+		if(playerConfig.getInt("storylineLevel") == 0) {
+			plugin.log.info(player.getName() + " exits without completed story");
+		}
+	}
+
+	private void resetPlayerState(Player player) {
+		FileConfiguration playerConfig = getPlayerConfiguration(player);
+		
+		if(playerConfig.getInt("storylineLevel") == 0) {
+			for(Player p : Bukkit.getOnlinePlayers()) {
+				p.showPlayer(plugin, player);
+				player.showPlayer(plugin, p);
+			}
+			
+			player.removePotionEffect(PotionEffectType.BLINDNESS);
+			player.removePotionEffect(PotionEffectType.SLOW);
+			player.resetPlayerTime();
+			
+			restoreInventory(player);
+			
+			playersToGoOutside.remove(player.getUniqueId());
+	        playersInBlackRoom.remove(player.getUniqueId());
+	        playersWhoTakedKeys.remove(player.getUniqueId());
+	        playerMessageCount.remove(player.getUniqueId());
+	        playersWithLoadedPack.remove(player.getUniqueId());
+	        
+	        plugin.log.info("Status has been successfully reset for " + player.getName() + " caused by: Disabling Plugin / Player Leave / Player Reached New Level");
+		}
+	}
+	
+	private void saveInventory(Player player) {
         UUID playerID = player.getUniqueId();
         ItemStack[] inventoryContents = player.getInventory().getContents();
         playerInventories.put(playerID, inventoryContents);
         player.getInventory().clear();
     }
 
-	public void restoreInventory(Player player) {
+	public static void restoreInventory(Player player) {
 	    UUID playerID = player.getUniqueId();
 	    if (playerInventories.containsKey(playerID)) {
 	        ItemStack[] inventoryContents = playerInventories.get(playerID);
@@ -382,14 +397,14 @@ public class EventListener implements Listener{
 	    }
 	}
 	
-	private File getPlayerFile(Player player) {
+	public static File getPlayerFile(Player player) {
 		File playerFolder = new File(plugin.getDataFolder(), "Players");
 		File playerFile = new File(playerFolder, player.getUniqueId() + ".yml");
 		
 		return playerFile;
 	}
 	
-	private FileConfiguration getPlayerConfiguration(Player player) {
+	public static FileConfiguration getPlayerConfiguration(Player player) {
 		File playerFolder = new File(plugin.getDataFolder(), "Players");
     	File playerFile = new File(playerFolder, player.getUniqueId() + ".yml");
     	FileConfiguration playerConfig = YamlConfiguration.loadConfiguration(playerFile);
@@ -397,7 +412,7 @@ public class EventListener implements Listener{
     	return playerConfig;
 	}
 	
-	private void saveConfig(File playerFile, FileConfiguration playerConfig) {
+	public static void saveConfig(File playerFile, FileConfiguration playerConfig) {
         try {
             playerConfig.save(playerFile);
         } catch (IOException e) {

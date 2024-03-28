@@ -4,9 +4,12 @@ import java.util.logging.Logger;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import ru.hofwq.storyline.commands.ClearEnderChest;
 import ru.hofwq.storyline.commands.SetStoryLevel;
 import ru.hofwq.storyline.config.Config;
+import ru.hofwq.storyline.events.BorderListener;
 import ru.hofwq.storyline.events.EventListener;
+import ru.hofwq.storyline.events.LineBorderListener;
 
 public class Storyline extends JavaPlugin{
 	public Logger log = getLogger();
@@ -26,9 +29,12 @@ public class Storyline extends JavaPlugin{
 		
 		//Registering events
 		getServer().getPluginManager().registerEvents(new EventListener(), this);
+		getServer().getPluginManager().registerEvents(new BorderListener(), this);
+		getServer().getPluginManager().registerEvents(new LineBorderListener(), this);
 		
 		//Registering commands
 		getCommand("setstorylevel").setExecutor(new SetStoryLevel());
+		getCommand("clearenderchest").setExecutor(new ClearEnderChest());
 		
 		log.info("Storyline enabled");
 	}
@@ -39,7 +45,7 @@ public class Storyline extends JavaPlugin{
 		
 		log.info("Storyline disabled");
 	}
-	
+
 	public static Storyline getPlugin() {
 		return plugin;
 	}

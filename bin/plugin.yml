@@ -1,6 +1,6 @@
 name: Storyline
 main: ru.hofwq.storyline.Storyline
-version: 1.1 alpha
+version: 1.2 alpha
 author: hofwq
 api-version: 1.16
 
@@ -9,3 +9,7 @@ commands:
     description: Выставить определенный уровень сюжета.
     usage: /setstorylevel [Player] [Level]
     aliases: [setstorylvl, setstlvl]
+  clearenderchest:
+    description: Очистить эндер-сундук игроку(онлайн)
+    usage: /clearenderchest [Player]
+    aliases: [clearechest, clearec]

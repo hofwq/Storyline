@@ -76,30 +76,6 @@ public class Config implements EventListener{
 		    config.set("blackRoom.Z", 0);
 		}
 
-		if(!config.contains("dangerZone.X")){
-		    config.set("dangerZone.X", 0);
-		}
-		
-		if(!config.contains("dangerZone.Y")){
-		    config.set("dangerZone.Y", 0);
-		}
-		
-		if(!config.contains("dangerZone.Z")){
-		    config.set("dangerZone.Z", 0);
-		}
-
-		if(!config.contains("devyatochka.X")){
-		    config.set("devyatochka.X", 0);
-		}
-		
-		if(!config.contains("devyatochka.Y")){
-		    config.set("devyatochka.Y", 0);
-		}
-		
-		if(!config.contains("devyatochka.Z")){
-		    config.set("devyatochka.Z", 0);
-		}
-
 		if(!config.contains("keyLocation.X")){
 		    config.set("keyLocation.X", 0);
 		}
@@ -124,7 +100,6 @@ public class Config implements EventListener{
 		    config.set("enterLocation.Z", 0);
 		}
 
-		
 		saveConfig(configFile);
 	}
 	
