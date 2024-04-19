@@ -172,7 +172,7 @@ public class EventListener implements Listener{
 			return;
 		} else if(playersToGoOutside.contains(player.getUniqueId())) {
 		    if(player.getLocation().distance(enterLocation) <= 6 && (!playerMessageCount.containsKey(player.getUniqueId()) || playerMessageCount.get(player.getUniqueId()) < 1)) {
-		        sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду пару минут до пешеходного перехода, после перехода которого останется совсем немного до Пятёрочки.", 0);
+		        sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду до пешеходного перехода напротив Девяточки.", 0);
 		        sendDelayedMessage(player, "", 0);
 		        playerMessageCount.put(player.getUniqueId(), 1);
 		    }
@@ -204,6 +204,8 @@ public class EventListener implements Listener{
 	public void onInteract(PlayerInteractEvent e) {
 		Player player = e.getPlayer();
 		FileConfiguration playerConfig = getPlayerConfiguration(player);
+		
+		Block block = e.getClickedBlock();
 		
 		Action action = e.getAction();
 		Material material = null;
@@ -243,7 +245,6 @@ public class EventListener implements Listener{
 			ItemMeta itemMeta = item.getItemMeta();
 			
 			if(itemMeta.hasDisplayName() && itemMeta.getDisplayName().equals(stickName) && itemMeta.hasLore() && itemMeta.getLore().equals(stickLore)) {
-				Block block = e.getClickedBlock();
 				if(block.getType() == Material.IRON_DOOR) {
 					Openable ironDoor = (Openable) block.getBlockData();
 
@@ -255,6 +256,13 @@ public class EventListener implements Listener{
 						closeDoorAfter(block, 5);
 					}
 				}
+			}
+		}
+		
+		if(block != null && (block.getLocation().equals(Storyline.FIRST_DOOR) || block.getLocation().equals(Storyline.SECOND_DOOR))) {
+			if(playersToGoOutside.contains(player.getUniqueId())) {
+				player.sendMessage(ChatColor.GRAY + "Поздно, магазин уже закрыт, нужно в Девяточку, она открыта 24/7.");
+				e.setCancelled(true);
 			}
 		}
 	}
@@ -294,40 +302,6 @@ public class EventListener implements Listener{
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
     }
 	
-	public static void newLevelAnnouncement(Player player, File playerFile, FileConfiguration playerConfig, int delaySeconds) {
-		new BukkitRunnable() {
-			@Override
-			public void run() {
-				if(playerConfig.getInt("storylineLevel") == 0) {
-					playerConfig.set("storylineLevel", 1);
-				}
-		        saveConfig(playerFile, playerConfig);
-
-		        Location busStop = new Location(player.getWorld(), 2753, 36, 2947);
-		        
-		        for(Player p : Bukkit.getOnlinePlayers()) {
-					p.showPlayer(plugin, player);
-					player.showPlayer(plugin, p);
-				}
-				
-				player.removePotionEffect(PotionEffectType.BLINDNESS);
-				player.removePotionEffect(PotionEffectType.SLOW);
-				player.resetPlayerTime();
-				
-				restoreInventory(player);
-				
-				playersToGoOutside.remove(player.getUniqueId());
-		        playersInBlackRoom.remove(player.getUniqueId());
-		        playersWhoTakedKeys.remove(player.getUniqueId());
-		        playerMessageCount.remove(player.getUniqueId());
-		        playersWithLoadedPack.remove(player.getUniqueId());
-		        
-		        player.teleport(busStop);
-		        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-		        player.sendMessage(ChatColor.GREEN + "Вы перешли на новый уровень " + playerConfig.getInt("storylineLevel"));
-			}
-		}.runTaskLater(plugin, delaySeconds * 20);
-	}
 	
 	@EventHandler
 	public void onPluginDisable(PluginDisableEvent e) {
@@ -337,7 +311,7 @@ public class EventListener implements Listener{
 				FileConfiguration playerConfig = getPlayerConfiguration(player);
 				
 				if(playerConfig.getInt("storylineLevel") == 0) {
-					player.sendMessage(ChatColor.RED + "The plugin has been disabled. Try to reconnect to the server, if the plugin does not work, report it to the administration.");
+					player.sendMessage(ChatColor.RED + "The Storyline plugin has been reloaded or disabled. Try reconnect to the server, this may help solve the problem. If the plugin doesn't work, report it to the administration.");
 				}
 			}
 		}
@@ -355,7 +329,27 @@ public class EventListener implements Listener{
 		}
 	}
 
-	private void resetPlayerState(Player player) {
+	public static void newLevelAnnouncement(Player player, File playerFile, FileConfiguration playerConfig, int delaySeconds) {
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				resetPlayerState(player);
+				
+				if(playerConfig.getInt("storylineLevel") == 0) {
+					playerConfig.set("storylineLevel", 1);
+					saveConfig(playerFile, playerConfig);
+					
+					Location busStop = new Location(player.getWorld(), 2753, 36, 2947);
+					
+					player.teleport(busStop);
+					player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+					player.sendMessage(ChatColor.GREEN + "Вы перешли на новый уровень " + playerConfig.getInt("storylineLevel"));
+				}
+			}
+		}.runTaskLater(plugin, delaySeconds * 20);
+	}
+	
+	private static void resetPlayerState(Player player) {
 		FileConfiguration playerConfig = getPlayerConfiguration(player);
 		
 		if(playerConfig.getInt("storylineLevel") == 0) {
@@ -376,7 +370,7 @@ public class EventListener implements Listener{
 	        playerMessageCount.remove(player.getUniqueId());
 	        playersWithLoadedPack.remove(player.getUniqueId());
 	        
-	        plugin.log.info("Status has been successfully reset for " + player.getName() + " caused by: Disabling Plugin / Player Leave / Player Reached New Level");
+	        plugin.log.info("Status has been successfully reset for " + player.getName() + ". Caused by: Disabling Plugin / Player Leave / Player Reached New Level");
 		}
 	}
 	
