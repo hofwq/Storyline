@@ -264,6 +264,13 @@ public class EventListener implements Listener{
 				player.sendMessage(ChatColor.GRAY + "Поздно, магазин уже закрыт, нужно в Девяточку, она открыта 24/7.");
 				e.setCancelled(true);
 			}
+		} else if(block != null && (block.getLocation().equals(Storyline.THIRD_DOOR))) {
+			long time = Bukkit.getWorld("world").getTime();
+			
+			if(time < 12500 || time > 23500) {
+				player.sendMessage(ChatColor.RED + "Аптека закрыта на ночь!");
+				e.setCancelled(true);
+			}
 		}
 	}
 

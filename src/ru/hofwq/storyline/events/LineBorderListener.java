@@ -20,8 +20,8 @@ public class LineBorderListener implements Listener {
 	private Border border;
 	
 	public LineBorderListener() {
-        Vector p1 = new Vector(2817, 36, 2936);
-        Vector p2 = new Vector(2817, 67, 3036);
+        Vector p1 = new Vector(2818, 36, 2934);
+        Vector p2 = new Vector(2813, 36, 2932);
         this.border = new Border(p1, p2);
     }
 	

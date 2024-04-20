@@ -20,8 +20,8 @@ public class BorderListener implements Listener{
 	int enterLocationZ = plugin.getConfig().getInt("enterLocation.Z");
     
 	public BorderListener() {
-        Vector p1 = new Vector(2890, 80, 2936);
-        Vector p2 = new Vector(2764, 30, 3036);
+        Vector p1 = new Vector(2804, 36, 2928);
+        Vector p2 = new Vector(2890, 82, 3045);
         this.border = new Border(p1, p2);
         this.enterLocation = new Location(Bukkit.getWorld("world"), enterLocationX, enterLocationY, enterLocationZ);
     }
@@ -32,7 +32,7 @@ public class BorderListener implements Listener{
 		
 		if (!border.contains(player.getLocation()) && EventListener.playersToGoOutside.contains(player.getUniqueId())) {
             player.teleport(enterLocation);
-            player.sendMessage(ChatColor.RED + "Во время пролога вы не можете уходить далеко от места событий!");
+            player.sendMessage(ChatColor.RED + "Нельзя, мне нужно до пешеходного перехода.");
         }
 	}
 }
