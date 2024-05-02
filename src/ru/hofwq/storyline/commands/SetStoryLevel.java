@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.events.EventListener;
 
 public class SetStoryLevel implements CommandExecutor{
 	Storyline plugin = Storyline.getPlugin();
@@ -32,7 +33,7 @@ public class SetStoryLevel implements CommandExecutor{
 			sender.sendMessage(Storyline.NOT_ALLOWED);
 			return true;
 		}
-		
+
 		if(!(sender instanceof Player) && args.length == 2) {
 			player = Bukkit.getPlayer(args[0]);
 		} else if(sender instanceof Player && args.length == 1) {
@@ -71,19 +72,23 @@ public class SetStoryLevel implements CommandExecutor{
 			return true;
 		}
 
+		EventListener.resetPlayerState(player);
+		
 		playerConfig.set("storylineLevel", newStorylineLevel);
 		saveConfig(playerFile, playerConfig);
 
 		sender.sendMessage(ChatColor.GREEN + "Успешно выставлен уровень " + playerConfig.getInt("storylineLevel") + " игроку " + player.getName());
+		player.kickPlayer("Успешно выставлен " + playerConfig.getInt("storylineLevel") + " уровень сюжета, перезайдите на сервер.");
 		
 		return true;
-	}
+		}
 
-	private void saveConfig(File playerFile, FileConfiguration playerConfig) {
-        try {
-            playerConfig.save(playerFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+		private void saveConfig(File playerFile, FileConfiguration playerConfig) {
+		    try {
+		        playerConfig.save(playerFile);
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		    }
+		}
+		
 }

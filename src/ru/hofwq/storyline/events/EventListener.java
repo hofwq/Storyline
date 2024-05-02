@@ -3,11 +3,13 @@ package ru.hofwq.storyline.events;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -22,7 +24,11 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
@@ -44,6 +50,7 @@ public class EventListener implements Listener{
 	public static List<UUID> playersInBlackRoom = new ArrayList<>();
 	public static List<UUID> playersWhoTakedKeys = new ArrayList<>();
 	public static List<UUID> playersWithLoadedPack = new ArrayList<>();
+	public static List<String> allowedCmds = Arrays.asList("/register", "/reg", "/login", "/l");
 	public static HashMap<UUID, Integer> playerMessageCount = new HashMap<>();
 	public static HashMap<UUID, ItemStack[]> playerInventories = new HashMap<>();
 	public static HashMap<Block, Boolean> doorStates = new HashMap<>();
@@ -104,20 +111,25 @@ public class EventListener implements Listener{
         			player.teleport(semyonRoom); //2877 58 3002
         			player.setPlayerTime(18000, false);
         			
+        			player.setGameMode(GameMode.SURVIVAL);
+        			player.setFlying(false);
+        			player.setAllowFlight(false);
+        			player.setFoodLevel(8);
+        			
         			for(Player p : Bukkit.getOnlinePlayers()) {
         				p.hidePlayer(plugin, player);
         				player.hidePlayer(plugin, p);
         			}
         			
-        			sendDelayedMessage(player, ChatColor.YELLOW + "Я сидел дома шестые сутки, смотрел в монитор, читая новые треды на форуме несколько часов подряд.", 0);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Я сидел дома шестые сутки, смотрел в монитор, читая новые треды на форуме несколько часов подряд.", 0, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 0);
-        			sendDelayedMessage(player, ChatColor.YELLOW + "Сейчас все обсуждали новое аниме под названием \"Советский мир\", в котором действия происходят в мире, в котором ещё не распался советский союз, в который попадает главный герой.", 5);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Сейчас все обсуждали новое аниме под названием \"Советский мир\", в котором действия происходят в мире, в котором ещё не распался советский союз, в который попадает главный герой.", 5, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 5);
-        			sendDelayedMessage(player, ChatColor.YELLOW + "Мне не особо нравились аниме подобного жанра, в которых гг попадает в альтернативные миры, ведь того, что происходит в этих аниме, никак не может произойти в жизни...", 11);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Мне не особо нравились аниме подобного жанра, в которых гг попадает в альтернативные миры, ведь того, что происходит в этих аниме, никак не может произойти в жизни...", 11, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 11);
-        			sendDelayedMessage(player, ChatColor.YELLOW + "Пора бы уже выйти на улицу, сходить в магазин...", 15);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "Пора бы уже выйти на улицу, сходить в магазин...", 15, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 15);
-        			sendDelayedMessage(player, ChatColor.YELLOW + "А то так и помру с голода..", 18);
+        			sendDelayedMessage(player, ChatColor.YELLOW + "А то так и помру с голода..", 18, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 18);
         			
         			int delaySeconds = 25;
@@ -129,12 +141,28 @@ public class EventListener implements Listener{
         				}
         			}, delayTicks);
         			
-        			sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", 25);
+        			sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", 25, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         			sendDelayedMessage(player, "", 25);
         		}
         	}, delayTicks);
         	
         }
+	}
+	
+	@EventHandler
+	public void onPlayerJoin(PlayerJoinEvent e) {
+		Player player = e.getPlayer();
+		
+		for(Player p : Bukkit.getOnlinePlayers()) {
+			FileConfiguration playerConfig = getPlayerConfiguration(p);
+			if(playerConfig.getInt("storylineLevel") == 0) {
+				if(player != p) {
+					p.hidePlayer(plugin, player);
+					player.hidePlayer(plugin, p);
+					plugin.log.info("Hided " + p.getName() + " from " + player.getName());
+				}
+			}
+		}
 	}
 	
 	@EventHandler
@@ -144,6 +172,34 @@ public class EventListener implements Listener{
 		if(e.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) {
 	        playersWithLoadedPack.add(player.getUniqueId());
 	        plugin.log.info(player.getName() + " successfully loaded resourcepack");
+	    }
+	}
+	
+	@EventHandler
+	public void onCommand(PlayerCommandPreprocessEvent e) {
+		Player player = e.getPlayer();
+		FileConfiguration playerConfig = getPlayerConfiguration(player);
+		String command = e.getMessage().split(" ")[0];
+		
+		if(playerConfig.getInt("storylineLevel") == 0) {
+			if(!allowedCmds.contains(command)) {
+				plugin.log.info(player.getName() + " запрещено использовать команды во время сюжета.");
+				e.setCancelled(true);
+				return;
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onHunger(FoodLevelChangeEvent e) {
+	    if(e.getEntity() instanceof Player) {
+	        Player player = (Player) e.getEntity();
+	        FileConfiguration playerConfig = getPlayerConfiguration(player);
+	        
+	        if(playerConfig.getInt("storylineLevel") == 0) {
+	            e.setCancelled(true);
+	            return;
+	        }
 	    }
 	}
 	
@@ -236,7 +292,7 @@ public class EventListener implements Listener{
 			}
 		    
 			if(!playersWhoTakedKeys.contains(player.getUniqueId())) {
-				sendDelayedMessage(player, ChatColor.YELLOW + "Я одеваюсь и беру ключи.", 0);
+				sendDelayedMessage(player, ChatColor.YELLOW + "Я одеваюсь и беру ключи.", 0, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
 				sendDelayedMessage(player, "", 0);
 			}
 		}
@@ -247,34 +303,25 @@ public class EventListener implements Listener{
 			if(itemMeta.hasDisplayName() && itemMeta.getDisplayName().equals(stickName) && itemMeta.hasLore() && itemMeta.getLore().equals(stickLore)) {
 				if(block.getType() == Material.IRON_DOOR) {
 					Openable ironDoor = (Openable) block.getBlockData();
-
-					if(!doorStates.containsKey(block) || !doorStates.get(block)) {
-						ironDoor.setOpen(true);
-						block.setBlockData(ironDoor);
-						
-						doorStates.put(block, true);
-						closeDoorAfter(block, 5);
+					Location ironDoorLoc = new Location(player.getWorld(), 2879, 58, 3006);
+					
+					if(player.getLocation().distance(ironDoorLoc) <= 3) {
+						if(!doorStates.containsKey(block) || !doorStates.get(block)) {
+							ironDoor.setOpen(true);
+							block.setBlockData(ironDoor);
+							
+							player.playSound(player.getLocation(), Sound.BLOCK_IRON_DOOR_OPEN, 1L, 1L);
+							
+							doorStates.put(block, true);
+							closeDoorAfter(block, 5, player);
+						}
 					}
 				}
 			}
 		}
-		
-		if(block != null && (block.getLocation().equals(Storyline.FIRST_DOOR) || block.getLocation().equals(Storyline.SECOND_DOOR))) {
-			if(playersToGoOutside.contains(player.getUniqueId())) {
-				player.sendMessage(ChatColor.GRAY + "Поздно, магазин уже закрыт, нужно в Девяточку, она открыта 24/7.");
-				e.setCancelled(true);
-			}
-		} else if(block != null && (block.getLocation().equals(Storyline.THIRD_DOOR))) {
-			long time = Bukkit.getWorld("world").getTime();
-			
-			if(time < 12500 || time > 23500) {
-				player.sendMessage(ChatColor.RED + "Аптека закрыта на ночь!");
-				e.setCancelled(true);
-			}
-		}
 	}
-
-	private void closeDoorAfter(Block door, int delaySeconds) {
+	
+	private void closeDoorAfter(Block door, int delaySeconds, Player player) {
 	    int delayTicks = delaySeconds * 20;
 	    
 	    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -285,6 +332,8 @@ public class EventListener implements Listener{
 	                if(doorBlock.isOpen()) {
 	                    doorBlock.setOpen(false);
 	                    door.setBlockData(doorBlock);
+	                    
+	                    player.playSound(door.getLocation(), Sound.BLOCK_IRON_DOOR_CLOSE, 10L, 1L);
 	                    
 	                    doorStates.put(door, false);
 	                }
@@ -309,6 +358,11 @@ public class EventListener implements Listener{
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
     }
 	
+	public static void sendDelayedMessage(Player player, String message, int delaySeconds, Sound sound) {
+		int delayTicks = delaySeconds * 20;
+		Bukkit.getScheduler().runTaskLater(plugin, () -> player.playSound(player.getLocation(), sound, 1L, 1L), delayTicks - 1);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
+	}
 	
 	@EventHandler
 	public void onPluginDisable(PluginDisableEvent e) {
@@ -336,6 +390,17 @@ public class EventListener implements Listener{
 		}
 	}
 
+	@EventHandler
+	public void onChatMessage(AsyncPlayerChatEvent e) {
+		Player player = e.getPlayer();
+		FileConfiguration playerConfig = getPlayerConfiguration(player);
+		
+		if(playerConfig.getInt("storylineLevel") == 0) {
+			e.setCancelled(true);
+			return;
+		}
+	}
+	
 	public static void newLevelAnnouncement(Player player, File playerFile, FileConfiguration playerConfig, int delaySeconds) {
 		new BukkitRunnable() {
 			@Override
@@ -356,7 +421,7 @@ public class EventListener implements Listener{
 		}.runTaskLater(plugin, delaySeconds * 20);
 	}
 	
-	private static void resetPlayerState(Player player) {
+	public static void resetPlayerState(Player player) {
 		FileConfiguration playerConfig = getPlayerConfiguration(player);
 		
 		if(playerConfig.getInt("storylineLevel") == 0) {
@@ -368,6 +433,8 @@ public class EventListener implements Listener{
 			player.removePotionEffect(PotionEffectType.BLINDNESS);
 			player.removePotionEffect(PotionEffectType.SLOW);
 			player.resetPlayerTime();
+			player.setAllowFlight(true);
+			player.setFoodLevel(20);
 			
 			restoreInventory(player);
 			
