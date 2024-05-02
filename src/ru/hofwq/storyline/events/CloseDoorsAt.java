@@ -47,7 +47,7 @@ public class CloseDoorsAt implements Listener{
     		if(block.getLocation().distance(FIRST_DOOR) <= 3 || block.getLocation().distance(SECOND_DOOR) <= 3 || block.getLocation().distance(THIRD_DOOR) <= 3) {
     			switch(block.getType()) {
     			case ACACIA_DOOR:
-    				if(time >= 13500 && time <= 23500) {
+    				if(time > 13500 && time <= 23500) {
     					if(!EventListener.playersToGoOutside.contains(player.getUniqueId())) {
     						player.sendMessage(ChatColor.RED + "Магазин закрыт на ночь!");
     					}
@@ -57,7 +57,7 @@ public class CloseDoorsAt implements Listener{
     				
     				break;
     			case BIRCH_DOOR:
-    				if(time >= 13500 && time <= 23500) {
+    				if(time > 13500 && time <= 23500) {
     					if(!EventListener.playersToGoOutside.contains(player.getUniqueId())) {
     						player.sendMessage(ChatColor.RED + "Аптека закрыта на ночь!");
     					}
@@ -83,7 +83,7 @@ public class CloseDoorsAt implements Listener{
     			}
     		} else if(block.getLocation().distance(FOURTH_DOOR) <= 3 || block.getLocation().distance(FIFTH_DOOR) <= 3) {
     			if(block.getType() == Material.BIRCH_DOOR) {
-    				if(time >= 13500 && time <= 23500) {
+    				if(time > 13500 && time <= 23500) {
     					player.sendMessage(ChatColor.RED + "Столовая закрыта на ночь.");
     					
     					e.setCancelled(true);
@@ -119,7 +119,7 @@ public class CloseDoorsAt implements Listener{
                 	Openable fourthDoor = (Openable) fourth_door.getBlockData();
                 	Openable fifthDoor = (Openable) fifth_door.getBlockData();
                 	
-                	if(time >= 0 && time <= 12500) {
+                	if(time >= 0 && time <= 13500) {
                 		fourthDoor.setOpen(true);
                 		fourth_door.setBlockData(fourthDoor);
                 		
@@ -167,7 +167,7 @@ public class CloseDoorsAt implements Listener{
     	Openable secondDoor = (Openable) second_door.getBlockData();
     	Openable thirdDoor = (Openable) third_door.getBlockData();
     	
-    	if(time >= 0 && time <= 12500) {
+    	if(time >= 0 && time <= 13500) {
     		if(EventListener.playersToGoOutside.contains(player.getUniqueId())) {
     			closeDoorsForPlayer(player);
     		} else { 
