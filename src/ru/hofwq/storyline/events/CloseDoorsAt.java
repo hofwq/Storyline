@@ -83,9 +83,11 @@ public class CloseDoorsAt implements Listener{
     			}
     		} else if(block.getLocation().distance(FOURTH_DOOR) <= 3 || block.getLocation().distance(FIFTH_DOOR) <= 3) {
     			if(block.getType() == Material.BIRCH_DOOR) {
-    				player.sendMessage(ChatColor.RED + "Столовая закрыта на ночь.");
-    				
-    				e.setCancelled(true);
+    				if(time >= 13500 && time <= 23500) {
+    					player.sendMessage(ChatColor.RED + "Столовая закрыта на ночь.");
+    					
+    					e.setCancelled(true);
+    				}
     			}
     		}
     	}
