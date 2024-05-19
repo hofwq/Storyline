@@ -79,7 +79,7 @@ public class Utils {
 	
 	public static void sendDelayedMessage(Player player, String message, int delaySeconds, String sound) {
 		int delayTicks = delaySeconds * 20;
-		Bukkit.getScheduler().runTaskLater(plugin, () -> player.playSound(player.getLocation(), sound, 5L, 1L), delayTicks);
+		Bukkit.getScheduler().runTaskLater(plugin, () -> player.playSound(player.getLocation(), sound, 1L, 1L), delayTicks);
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
 	}
 	
@@ -87,6 +87,11 @@ public class Utils {
 		int delayTicks = delaySeconds * 20;
 		Bukkit.getScheduler().runTaskLater(plugin, () -> player.playSound(player.getLocation(), sound, 1L, 1L), delayTicks);
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendMessage(message), delayTicks);
+	}
+	
+	public static void playDelayedSound(Player player, int delaySeconds, String sound) {
+		int delayTicks = delaySeconds * 20;
+		Bukkit.getScheduler().runTaskLater(plugin, () -> player.playSound(player.getLocation(), sound, 1L, 1L), delayTicks);
 	}
 	
 	public static void givePotionEffect(Player player, PotionEffectType effect, int time, int delaySeconds) {
@@ -179,7 +184,7 @@ public class Utils {
 					player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
 					isNewLevel = true;
 					Utils.setPlayerStand(player);
-					player.sendMessage(ChatColor.GREEN + "Вы перешли на новый уровень " + playerConfig.getInt("storylineLevel"));
+					Utils.sendTitleToPlayer(player, ChatColor.GREEN + "Вы завершили главу:", ChatColor.GRAY + "Пролог", 20, 40, 20);
 				}
 			}
 		}.runTaskLater(plugin, delaySeconds * 20);
@@ -271,5 +276,9 @@ public class Utils {
 				isClosedDoor = true;
 			}
 		}
+	}
+	
+	public static void sendTitleToPlayer(Player player, String title, String subtitle, int fadein, int stay, int fadeout) {
+		player.sendTitle(title, subtitle, fadein, stay, fadeout);
 	}
 }

@@ -107,14 +107,14 @@ public class EventListener implements Listener{
         					Utils.saveInventory(player);
         					
         					if(!world.getChunkAt(semyonRoom).isLoaded()) {
-        						world.getChunkAt(semyonRoom).load();
+        						world.getChunkAt(semyonRoom).setForceLoaded(true);
         					}
         					
         					player.teleport(semyonRoom); //2877 58 3002
         					player.setPlayerTime(18000, false);
         					
         					SitPlayer.setSitting(false);
-        					
+
         					task[0] = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
         					    @Override
         					    public void run() {
@@ -124,15 +124,18 @@ public class EventListener implements Listener{
         					            player.setSneaking(false);
         					            player.setAllowFlight(true);
         					            player.setFlying(true);
-        					            
+
         					            if(player.isFlying()) {
         					            	player.setSneaking(false);
+        					            	SitPlayer.setSitting(true);
+        					            }
+
+        					            if(player.isSneaking()) {
+        					            	SitPlayer.setSitting(true);
         					            }
         					            
-        					            if(!SitPlayer.isSitting()) {
-        					                SitPlayer.setSitting(true);
-        					            } 
-        					            
+        					            SitPlayer.setSitting(true);
+
         					            if(Utils.isNewLevel) {
         					                task[0].cancel();
         					                SitPlayer.setSitting(false);
@@ -172,8 +175,8 @@ public class EventListener implements Listener{
         					delay += 6;
         					Utils.allowPlayerWalk(player, delay);
         					
-        					Utils.sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", delay, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         					Utils.sendDelayedMessage(player, "", delay);
+        					Utils.sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", delay, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
         				}
         			}, delayTicks);
         		}
@@ -278,6 +281,7 @@ public class EventListener implements Listener{
 		FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
 		SitPlayer SitPlayer = new SitPlayer(player);
 		Location enterLocation = new Location(player.getWorld(), Utils.enterLocationX, Utils.enterLocationY, Utils.enterLocationZ);
+		String voice_6 = "minecraft:my_sounds.voice6";
 		
 		if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
 			if(player.isSneaking() && !SitPlayer.isSitting()) {
@@ -295,7 +299,7 @@ public class EventListener implements Listener{
 			}
 		} else if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
 		    if(player.getLocation().distance(enterLocation) <= 6 && (!PlayerLists.playerMessageCount.containsKey(player.getUniqueId()) || PlayerLists.playerMessageCount.get(player.getUniqueId()) < 1)) {
-		    	Utils.sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду до пешеходного перехода напротив Девяточки.", 0);
+		    	Utils.sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду до пешеходного перехода напротив Девяточки.", 0, voice_6);
 		        Utils.sendDelayedMessage(player, "", 0);
 		        PlayerLists.playerMessageCount.put(player.getUniqueId(), 1);
 		    }

@@ -33,20 +33,22 @@ public class LineBorderListener implements Listener {
         File playerFile = Utils.getPlayerFile(player);
         
         String busSound = "minecraft:my_sounds.stolknovenie";
+        String voice_7 = "minecraft:my_sounds.voice7";
+        String voice_8 = "minecraft:my_sounds.voice8";
         int blackRoomX = plugin.getConfig().getInt("blackRoom.X");
     	int blackRoomY = plugin.getConfig().getInt("blackRoom.Y");
     	int blackRoomZ = plugin.getConfig().getInt("blackRoom.Z");
     	
     	if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     		if (border.contains(player.getLocation()) && (!PlayerLists.playerMessageCount.containsKey(player.getUniqueId()) || PlayerLists.playerMessageCount.get(player.getUniqueId()) < 2)) {
-    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Я начинаю переходить дорогу и...", 0);
+    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Я начинаю переходить дорогу и...", 0, voice_7);
     			Utils.sendDelayedMessage(player, "", 0);
     			PlayerLists.playerMessageCount.put(player.getUniqueId(), 2);
     			
     			Utils.givePotionEffect(player, PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 0);
     			Utils.givePotionEffect(player, PotionEffectType.SLOW, Integer.MAX_VALUE, 0);
     			
-    			player.playSound(player.getLocation(), busSound, 1L, 1L);
+    			Utils.playDelayedSound(player, 4, busSound);
     			
     			PlayerLists.playersInBlackRoom.add(player.getUniqueId());
     			
@@ -61,10 +63,10 @@ public class LineBorderListener implements Listener {
     				}
     			}, delayTicks);
     			
-    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Автобус врезается в меня.", 6);
+    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Автобус врезается в меня.", 6, voice_8);
     			Utils.sendDelayedMessage(player, "", 6);
     			
-    			Utils.newLevelAnnouncement(player, playerFile, playerConfig, 9);
+    			Utils.newLevelAnnouncement(player, playerFile, playerConfig, 10);
     		}
     	}
 	}
