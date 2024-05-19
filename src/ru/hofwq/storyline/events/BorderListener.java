@@ -10,6 +10,7 @@ import org.bukkit.util.Vector;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.utils.PlayerLists;
 
 public class BorderListener implements Listener{
 	Storyline plugin = Storyline.getPlugin();
@@ -18,7 +19,7 @@ public class BorderListener implements Listener{
     int enterLocationX = plugin.getConfig().getInt("enterLocation.X");
 	int enterLocationY = plugin.getConfig().getInt("enterLocation.Y");
 	int enterLocationZ = plugin.getConfig().getInt("enterLocation.Z");
-    
+	
 	public BorderListener() {
         Vector p1 = new Vector(2804, 36, 2928);
         Vector p2 = new Vector(2890, 82, 3045);
@@ -30,7 +31,7 @@ public class BorderListener implements Listener{
 	public void onPlayerMove(PlayerMoveEvent e) {
 		Player player = e.getPlayer();
 		
-		if (!border.contains(player.getLocation()) && EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+		if (!border.contains(player.getLocation()) && PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
             player.teleport(enterLocation);
             player.sendMessage(ChatColor.RED + "Нельзя, мне нужно до пешеходного перехода.");
         }

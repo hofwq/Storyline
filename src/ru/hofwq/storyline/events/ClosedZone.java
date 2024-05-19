@@ -15,6 +15,7 @@ import org.bukkit.util.Vector;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.utils.PlayerLists;
 
 public class ClosedZone implements Listener{
 	Storyline plugin = Storyline.getPlugin();
@@ -35,7 +36,7 @@ public class ClosedZone implements Listener{
 		Location firstLocation = new Location(world, 2812, 36, 2935);
 		Location secondLocation = new Location(world, 2821, 38, 3045);
 		
-		if(border.contains(player.getLocation()) && EventListener.playersToGoOutside.contains(player.getUniqueId()) 
+		if(border.contains(player.getLocation()) && PlayerLists.playersToGoOutside.contains(player.getUniqueId()) 
 				&& !alreadyTiltedBack.contains(player.getUniqueId())) {
 			if(isPlayerFacingAway(player, border.getCenter(firstLocation, secondLocation))) {
 				knockbackPlayer(player);
@@ -52,7 +53,7 @@ public class ClosedZone implements Listener{
 				public void run() {
 					alreadyTiltedBack.remove(player.getUniqueId());
 				}
-			}.runTaskLater(plugin, 10L);
+			}.runTaskLater(plugin, 5L);
 		}
 	}
 	

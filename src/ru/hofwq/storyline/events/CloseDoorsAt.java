@@ -14,19 +14,14 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.BlockPosition;
-import com.comphenix.protocol.wrappers.WrappedBlockData;
-
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.utils.PlayerLists;
+import ru.hofwq.storyline.utils.Utils;
 
 public class CloseDoorsAt implements Listener{
     public static Storyline plugin = Storyline.getPlugin();
     private static boolean isShedulerEnabledMessage = false;
-    private static boolean isClosedDoor = false;
 
     World world = Bukkit.getWorld("world");
     Location FIRST_DOOR = new Location(world, 2827, 37, 2990);
@@ -48,7 +43,7 @@ public class CloseDoorsAt implements Listener{
     			switch(block.getType()) {
     			case ACACIA_DOOR:
     				if(time > 13500 && time <= 23500) {
-    					if(!EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    					if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     						player.sendMessage(ChatColor.RED + "Магазин закрыт на ночь!");
     					}
     					
@@ -58,7 +53,7 @@ public class CloseDoorsAt implements Listener{
     				break;
     			case BIRCH_DOOR:
     				if(time > 13500 && time <= 23500) {
-    					if(!EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    					if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     						player.sendMessage(ChatColor.RED + "Аптека закрыта на ночь!");
     					}
     					
@@ -70,13 +65,13 @@ public class CloseDoorsAt implements Listener{
     				break;
     			}
     			
-    			if(block.getType() == Material.BIRCH_DOOR && EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    			if(block.getType() == Material.BIRCH_DOOR && PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     				player.sendMessage(ChatColor.GRAY + "Мне нужно в Девяточку, а не в аптеку.");
     				
     				e.setCancelled(true);
     			}
     			
-    			if(block.getType() == Material.ACACIA_DOOR && EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    			if(block.getType() == Material.ACACIA_DOOR && PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     				player.sendMessage(ChatColor.GRAY + "Поздно, магазин уже закрыт, нужно в Девяточку, она открыта 24/7.");
     				
     				e.setCancelled(true);
@@ -107,7 +102,7 @@ public class CloseDoorsAt implements Listener{
                 
                 if(first_door.getType() == Material.ACACIA_DOOR && second_door.getType() == Material.ACACIA_DOOR && third_door.getType() == Material.BIRCH_DOOR) {
                     for (Player player : Bukkit.getOnlinePlayers()) {
-                    	if(EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+                    	if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
                     		closeDoorsForPlayer(player);
                     	}
                     	
@@ -150,7 +145,7 @@ public class CloseDoorsAt implements Listener{
         Location thirdDoorInside = new Location(world, 2829, 37, 3009);
         Location backupLocation = new Location(world, 2823, 36, 2991);
         
-    	if(EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    	if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     		if(isSameBlock(player.getLocation(), firstDoorInside) || isSameBlock(player.getLocation(), secondDoorInside) || isSameBlock(player.getLocation(), thirdDoorInside)) {
                 player.teleport(backupLocation);
             }
@@ -168,7 +163,7 @@ public class CloseDoorsAt implements Listener{
     	Openable thirdDoor = (Openable) third_door.getBlockData();
     	
     	if(time >= 0 && time <= 13500) {
-    		if(EventListener.playersToGoOutside.contains(player.getUniqueId())) {
+    		if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
     			closeDoorsForPlayer(player);
     		} else { 
     			openDoorsForPlayer(player);
@@ -190,9 +185,9 @@ public class CloseDoorsAt implements Listener{
         Block second_door = SECOND_DOOR.getBlock();
         Block third_door = THIRD_DOOR.getBlock();
 		
-		closeDoorForPlayer(player, first_door);
-		closeDoorForPlayer(player, second_door);
-		closeDoorForPlayer(player, third_door);
+		Utils.closeDoorForPlayer(player, first_door);
+		Utils.closeDoorForPlayer(player, second_door);
+		Utils.closeDoorForPlayer(player, third_door);
 	}
 	
 	private void openDoorsForPlayer(Player player) {
@@ -200,47 +195,8 @@ public class CloseDoorsAt implements Listener{
         Block second_door = SECOND_DOOR.getBlock();
         Block third_door = THIRD_DOOR.getBlock();
 		
-		openDoorForPlayer(player, first_door);
-		openDoorForPlayer(player, second_door);
-		openDoorForPlayer(player, third_door);
-	}
-	
-	private void openDoorForPlayer(Player player, Block door) {
-		Openable doorData = (Openable) door.getBlockData();
-		doorData.setOpen(true);
-		door.setBlockData(doorData);
-		
-		WrappedBlockData wrappedBlockData = WrappedBlockData.createData(door.getBlockData());
-		PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.BLOCK_CHANGE);
-		packet.getBlockPositionModifier().write(0, new BlockPosition(door.getLocation().toVector()));
-		packet.getBlockData().write(0, wrappedBlockData);
-		
-		try {
-			ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void closeDoorForPlayer(Player player, Block door) {
-		Openable doorData = (Openable) door.getBlockData();
-		doorData.setOpen(false);
-		door.setBlockData(doorData);
-		
-		WrappedBlockData wrappedBlockData = WrappedBlockData.createData(door.getBlockData());
-		PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.BLOCK_CHANGE);
-		packet.getBlockPositionModifier().write(0, new BlockPosition(door.getLocation().toVector()));
-		packet.getBlockData().write(0, wrappedBlockData);
-		
-		try {
-			ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		if(!isClosedDoor) {
-			plugin.log.info("Closed door using packets for " + player.getName());
-			isClosedDoor = true;
-		}
+        Utils.openDoorForPlayer(player, first_door);
+        Utils.openDoorForPlayer(player, second_door);
+        Utils.openDoorForPlayer(player, third_door);
 	}
 }

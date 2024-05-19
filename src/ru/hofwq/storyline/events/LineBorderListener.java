@@ -14,39 +14,41 @@ import org.bukkit.util.Vector;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.utils.PlayerLists;
+import ru.hofwq.storyline.utils.Utils;
 
 public class LineBorderListener implements Listener {
 	Storyline plugin = Storyline.getPlugin();
 	private Border border;
-	
 	public LineBorderListener() {
-        Vector p1 = new Vector(2818, 36, 2934);
-        Vector p2 = new Vector(2813, 36, 2932);
+        Vector p1 = new Vector(2804, 36, 2925);
+        Vector p2 = new Vector(2818, 36, 2936);
         this.border = new Border(p1, p2);
     }
 	
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e) {
 		Player player = e.getPlayer();
-		FileConfiguration playerConfig = EventListener.getPlayerConfiguration(player);
-        File playerFile = EventListener.getPlayerFile(player);
+		FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
+        File playerFile = Utils.getPlayerFile(player);
         
+        String busSound = "minecraft:my_sounds.stolknovenie";
         int blackRoomX = plugin.getConfig().getInt("blackRoom.X");
     	int blackRoomY = plugin.getConfig().getInt("blackRoom.Y");
     	int blackRoomZ = plugin.getConfig().getInt("blackRoom.Z");
     	
-    	if(EventListener.playersToGoOutside.contains(player.getUniqueId())) {
-    		if (border.contains(player.getLocation()) && (!EventListener.playerMessageCount.containsKey(player.getUniqueId()) || EventListener.playerMessageCount.get(player.getUniqueId()) < 2)) {
-    			EventListener.sendDelayedMessage(player, ChatColor.YELLOW + "Я начинаю переходить дорогу и...", 0);
-    			EventListener.sendDelayedMessage(player, "", 0);
-    			EventListener.playerMessageCount.put(player.getUniqueId(), 2);
+    	if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
+    		if (border.contains(player.getLocation()) && (!PlayerLists.playerMessageCount.containsKey(player.getUniqueId()) || PlayerLists.playerMessageCount.get(player.getUniqueId()) < 2)) {
+    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Я начинаю переходить дорогу и...", 0);
+    			Utils.sendDelayedMessage(player, "", 0);
+    			PlayerLists.playerMessageCount.put(player.getUniqueId(), 2);
     			
-    			EventListener.givePotionEffect(player, PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 0);
-    			EventListener.givePotionEffect(player, PotionEffectType.SLOW, Integer.MAX_VALUE, 0);
+    			Utils.givePotionEffect(player, PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 0);
+    			Utils.givePotionEffect(player, PotionEffectType.SLOW, Integer.MAX_VALUE, 0);
     			
-    			//playsound avtobus
+    			player.playSound(player.getLocation(), busSound, 1L, 1L);
     			
-    			EventListener.playersInBlackRoom.add(player.getUniqueId());
+    			PlayerLists.playersInBlackRoom.add(player.getUniqueId());
     			
     			Location blackRoom = new Location(player.getWorld(), blackRoomX, blackRoomY, blackRoomZ);
     			
@@ -59,12 +61,10 @@ public class LineBorderListener implements Listener {
     				}
     			}, delayTicks);
     			
+    			Utils.sendDelayedMessage(player, ChatColor.YELLOW + "Автобус врезается в меня.", 6);
+    			Utils.sendDelayedMessage(player, "", 6);
     			
-    			EventListener.sendDelayedMessage(player, ChatColor.YELLOW + "Автобус врезается в меня.", 3);
-    			EventListener.sendDelayedMessage(player, "", 3);
-    			
-    			EventListener.newLevelAnnouncement(player, playerFile, playerConfig, 6);
-    			
+    			Utils.newLevelAnnouncement(player, playerFile, playerConfig, 9);
     		}
     	}
 	}
