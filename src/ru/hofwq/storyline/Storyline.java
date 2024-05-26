@@ -9,6 +9,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+
 import ru.hofwq.storyline.commands.ClearEnderChest;
 import ru.hofwq.storyline.commands.SetStoryLevel;
 import ru.hofwq.storyline.config.Config;
@@ -26,6 +29,7 @@ public class Storyline extends JavaPlugin{
 	public Logger log = getLogger();
 	
 	private static Storyline plugin;
+	public ProtocolManager manager;
 	
 	private Map<UUID, ArmorStand> seats = new HashMap<>();
 	
@@ -35,7 +39,9 @@ public class Storyline extends JavaPlugin{
 	@Override
 	public void onEnable() {
 		plugin = this;
-
+		
+		manager = ProtocolLibrary.getProtocolManager();
+		
 		//Initializing config
 		Config createConfig = new Config();
 		createConfig.checkConfig();

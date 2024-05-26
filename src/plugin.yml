@@ -10,6 +10,9 @@ commands:
     usage: /setstorylevel [Player] [Level]
     aliases: [setstorylvl, setstlvl]
   clearenderchest:
-    description: Очистить эндер-сундук игроку(онлайн)
+    description: Очистить эндер-сундук игроку(онлайн).
     usage: /clearenderchest [Player]
     aliases: [clearechest, clearec]
+  sitting:
+    description: sit
+    usage: /sitting

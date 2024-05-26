@@ -30,6 +30,7 @@ import com.comphenix.protocol.wrappers.WrappedBlockData;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
+import ru.hofwq.storyline.events.EventListener;
 import ru.hofwq.storyline.playersit.SitPlayer;
 
 public class Utils {
@@ -183,6 +184,7 @@ public class Utils {
 					player.teleport(busStop);
 					player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
 					isNewLevel = true;
+					EventListener.task.cancel();
 					Utils.setPlayerStand(player);
 					Utils.sendTitleToPlayer(player, ChatColor.GREEN + "Вы завершили главу:", ChatColor.GRAY + "Пролог", 20, 40, 20);
 				}

@@ -34,7 +34,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -55,7 +54,7 @@ public class EventListener implements Listener{
 	public HashMap<Block, Boolean> doorStates = new HashMap<>();
 	Location ironDoorLoc = new Location(Bukkit.getWorld("world"), 2881, 58, 3006);
 	Location semyonRoom = new Location(Bukkit.getWorld("world"), Utils.semyonRoomX + 0.5, Utils.semyonRoomY + 0.5, Utils.semyonRoomZ);
-	final BukkitTask[] task = new BukkitTask[1];
+	public static BukkitTask task;
 	
 	@EventHandler
 	public void onLogin(LoginEvent e) {
@@ -113,9 +112,13 @@ public class EventListener implements Listener{
         					player.teleport(semyonRoom); //2877 58 3002
         					player.setPlayerTime(18000, false);
         					
+        					if(task != null && !task.isCancelled()) {
+        					    task.cancel();
+        					}
+        					
         					SitPlayer.setSitting(false);
 
-        					task[0] = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+        					task = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
         					    @Override
         					    public void run() {
         					        if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId()) && playerConfig.getInt("storylineLevel") == 0) {
@@ -125,28 +128,23 @@ public class EventListener implements Listener{
         					            player.setAllowFlight(true);
         					            player.setFlying(true);
 
-        					            if(player.isFlying()) {
-        					            	player.setSneaking(false);
-        					            	SitPlayer.setSitting(true);
+        					            if(player.isFlying() || player.isSneaking()) {
+        					                SitPlayer.setSitting(true);
         					            }
-
-        					            if(player.isSneaking()) {
-        					            	SitPlayer.setSitting(true);
-        					            }
-        					            
-        					            SitPlayer.setSitting(true);
 
         					            if(Utils.isNewLevel) {
-        					                task[0].cancel();
         					                SitPlayer.setSitting(false);
         					                player.setWalkSpeed(0.2f);
         					                player.setFlySpeed(0.2f);
         					                player.setAllowFlight(false);
         					                player.setFlying(false);
         					            }
+        					        } else if(task != null && !task.isCancelled()) {
+        					            task.cancel();
         					        }
         					    }
         					}, 0L, 1L);
+
         					
         					player.setGameMode(GameMode.SURVIVAL);
         					player.setFoodLevel(8);
@@ -174,6 +172,7 @@ public class EventListener implements Listener{
         					
         					delay += 6;
         					Utils.allowPlayerWalk(player, delay);
+        					task.cancel();
         					
         					Utils.sendDelayedMessage(player, "", delay);
         					Utils.sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", delay, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
@@ -209,8 +208,8 @@ public class EventListener implements Listener{
 		Utils.resetPlayerState(player);
 		SitPlayer.setSitting(false); 
 		
-		if(task[0] != null) {
-			task[0].cancel();
+		if(task != null && !task.isCancelled()) {
+		    task.cancel();
 		}
 		
 		if(playerConfig.getInt("storylineLevel") == 0) {
@@ -282,15 +281,7 @@ public class EventListener implements Listener{
 		SitPlayer SitPlayer = new SitPlayer(player);
 		Location enterLocation = new Location(player.getWorld(), Utils.enterLocationX, Utils.enterLocationY, Utils.enterLocationZ);
 		String voice_6 = "minecraft:my_sounds.voice6";
-		
-		if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
-			if(player.isSneaking() && !SitPlayer.isSitting()) {
-				SitPlayer.setSitting(true);
-			} else if(!player.isSneaking() && SitPlayer.isSitting()) {
-				SitPlayer.setSitting(false);
-			}
-		}
-		
+
 		if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId()) && playerConfig.getInt("storylineLevel") == 0) {
 			if(player.isOnGround() && player.isSneaking()) {
 				SitPlayer.setSitting(false);
@@ -308,21 +299,6 @@ public class EventListener implements Listener{
 		if(PlayerLists.playersInBlackRoom.contains(player.getUniqueId())) {
 			e.setCancelled(true);
 			return;
-		}
-	}
-	
-	@EventHandler
-	public void onPlayerToggleSneak(PlayerToggleSneakEvent e) {
-		Player player = e.getPlayer();
-		SitPlayer SitPlayer = new SitPlayer(player);
-		
-		if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
-			if(player.isSneaking()) {
-				SitPlayer.setSitting(true);
-			} else {
-				SitPlayer.setSitting(false);
-			}
-			e.setCancelled(true);
 		}
 	}
 	
@@ -437,6 +413,10 @@ public class EventListener implements Listener{
 		if(e.getPlugin().getName().equals("Storyline")) {
 		    Bukkit.getServer().getScheduler().cancelTasks(plugin);
 
+		    if(task != null && !task.isCancelled()) {
+		        task.cancel();
+		    }
+		    
 			for(Player player : Bukkit.getOnlinePlayers()) {
 				Utils.resetPlayerState(player);
 				FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
