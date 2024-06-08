@@ -30,7 +30,6 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
@@ -38,11 +37,9 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import fr.xephi.authme.api.v3.AuthMeApi;
 import fr.xephi.authme.events.LoginEvent;
-import ru.hofwq.storyline.playersit.SitPlayer;
 import ru.hofwq.storyline.utils.PlayerLists;
 import ru.hofwq.storyline.utils.Utils;
 import net.md_5.bungee.api.ChatColor;
@@ -52,9 +49,8 @@ public class EventListener implements Listener{
 	public static Storyline plugin = Storyline.getPlugin();
 	public HashMap<UUID, ItemStack[]> playerInventories = new HashMap<>();
 	public HashMap<Block, Boolean> doorStates = new HashMap<>();
-	Location ironDoorLoc = new Location(Bukkit.getWorld("world"), 2881, 58, 3006);
 	Location semyonRoom = new Location(Bukkit.getWorld("world"), Utils.semyonRoomX + 0.5, Utils.semyonRoomY + 0.5, Utils.semyonRoomZ);
-	public static BukkitTask task;
+	Location ironDoorLoc = new Location(Bukkit.getWorld("world"), 2881, 58, 3006);
 	
 	@EventHandler
 	public void onLogin(LoginEvent e) {
@@ -101,8 +97,7 @@ public class EventListener implements Listener{
         			Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
         				@Override
         				public void run() {
-        					World world = player.getWorld();
-        					SitPlayer SitPlayer = new SitPlayer(player);
+        					World world = Bukkit.getWorld("world");
         					Utils.saveInventory(player);
         					
         					if(!world.getChunkAt(semyonRoom).isLoaded()) {
@@ -111,43 +106,11 @@ public class EventListener implements Listener{
         					
         					player.teleport(semyonRoom); //2877 58 3002
         					player.setPlayerTime(18000, false);
-        					
-        					if(task != null && !task.isCancelled()) {
-        					    task.cancel();
-        					}
-        					
-        					SitPlayer.setSitting(false);
-
-        					task = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
-        					    @Override
-        					    public void run() {
-        					        if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId()) && playerConfig.getInt("storylineLevel") == 0) {
-        					            player.setWalkSpeed(0);
-        					            player.setFlySpeed(0);
-        					            player.setSneaking(false);
-        					            player.setAllowFlight(true);
-        					            player.setFlying(true);
-
-        					            if(player.isFlying() || player.isSneaking()) {
-        					                SitPlayer.setSitting(true);
-        					            }
-
-        					            if(Utils.isNewLevel) {
-        					                SitPlayer.setSitting(false);
-        					                player.setWalkSpeed(0.2f);
-        					                player.setFlySpeed(0.2f);
-        					                player.setAllowFlight(false);
-        					                player.setFlying(false);
-        					            }
-        					        } else if(task != null && !task.isCancelled()) {
-        					            task.cancel();
-        					        }
-        					    }
-        					}, 0L, 1L);
-
-        					
+        				    
         					player.setGameMode(GameMode.SURVIVAL);
         					player.setFoodLevel(8);
+
+        					plugin.sitPlayer(player);
         					
         					for(Player p : Bukkit.getOnlinePlayers()) {
         						p.hidePlayer(plugin, player);
@@ -172,7 +135,6 @@ public class EventListener implements Listener{
         					
         					delay += 6;
         					Utils.allowPlayerWalk(player, delay);
-        					task.cancel();
         					
         					Utils.sendDelayedMessage(player, "", delay);
         					Utils.sendDelayedMessage(player, ChatColor.GRAY + "Возьмите ключи и выходите на улицу.", delay, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE);
@@ -184,33 +146,11 @@ public class EventListener implements Listener{
 	}
 	
 	@EventHandler
-	public void onPlayerJoin(PlayerJoinEvent e) {
-		Player player = e.getPlayer();
-		
-		for(Player p : Bukkit.getOnlinePlayers()) {
-			FileConfiguration playerConfig = Utils.getPlayerConfiguration(p);
-			if(playerConfig.getInt("storylineLevel") == 0) {
-				if(player != p) {
-					p.hidePlayer(plugin, player);
-					player.hidePlayer(plugin, p);
-					plugin.log.info("Hided " + p.getName() + " from " + player.getName());
-				}
-			}
-		}
-	}
-	
-	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent e) {
 		Player player = e.getPlayer();
 		FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
-		SitPlayer SitPlayer = new SitPlayer(player);
 		
 		Utils.resetPlayerState(player);
-		SitPlayer.setSitting(false); 
-		
-		if(task != null && !task.isCancelled()) {
-		    task.cancel();
-		}
 		
 		if(playerConfig.getInt("storylineLevel") == 0) {
 			plugin.log.info(player.getName() + " exits without completed story");
@@ -272,22 +212,17 @@ public class EventListener implements Listener{
 	    }
 	}
 	
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent e) {
 		Player player = e.getPlayer();
-		
 		FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
-		SitPlayer SitPlayer = new SitPlayer(player);
+		
 		Location enterLocation = new Location(player.getWorld(), Utils.enterLocationX, Utils.enterLocationY, Utils.enterLocationZ);
 		String voice_6 = "minecraft:my_sounds.voice6";
 
 		if(!PlayerLists.playersToGoOutside.contains(player.getUniqueId()) && playerConfig.getInt("storylineLevel") == 0) {
-			if(player.isOnGround() && player.isSneaking()) {
-				SitPlayer.setSitting(false);
-				e.setCancelled(true);
-				return;
-			}
+			e.setCancelled(true);
+			return;
 		} else if(PlayerLists.playersToGoOutside.contains(player.getUniqueId())) {
 		    if(player.getLocation().distance(enterLocation) <= 6 && (!PlayerLists.playerMessageCount.containsKey(player.getUniqueId()) || PlayerLists.playerMessageCount.get(player.getUniqueId()) < 1)) {
 		    	Utils.sendDelayedMessage(player, ChatColor.YELLOW + "После выхода из подъезда, я иду до пешеходного перехода напротив Девяточки.", 0, voice_6);
@@ -413,11 +348,7 @@ public class EventListener implements Listener{
 		if(e.getPlugin().getName().equals("Storyline")) {
 		    Bukkit.getServer().getScheduler().cancelTasks(plugin);
 
-		    if(task != null && !task.isCancelled()) {
-		        task.cancel();
-		    }
-		    
-			for(Player player : Bukkit.getOnlinePlayers()) {
+		    for(Player player : Bukkit.getOnlinePlayers()) {
 				Utils.resetPlayerState(player);
 				FileConfiguration playerConfig = Utils.getPlayerConfiguration(player);
 

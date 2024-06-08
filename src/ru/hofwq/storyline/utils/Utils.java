@@ -30,7 +30,6 @@ import com.comphenix.protocol.wrappers.WrappedBlockData;
 
 import net.md_5.bungee.api.ChatColor;
 import ru.hofwq.storyline.Storyline;
-import ru.hofwq.storyline.events.EventListener;
 import ru.hofwq.storyline.playersit.SitPlayer;
 
 public class Utils {
@@ -173,19 +172,16 @@ public class Utils {
 		new BukkitRunnable() {
 			@Override
 			public void run() {
-				resetPlayerState(player);
-				
 				if(playerConfig.getInt("storylineLevel") == 0) {
+					resetPlayerState(player);
 					playerConfig.set("storylineLevel", 1);
 					Utils.saveConfig(playerFile, playerConfig);
 					
-					Location busStop = new Location(player.getWorld(), 2753, 36, 2947);
+					Location busStop = new Location(player.getWorld(), 3409, 42, 2383);
 					
 					player.teleport(busStop);
 					player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
 					isNewLevel = true;
-					EventListener.task.cancel();
-					Utils.setPlayerStand(player);
 					Utils.sendTitleToPlayer(player, ChatColor.GREEN + "Вы завершили главу:", ChatColor.GRAY + "Пролог", 20, 40, 20);
 				}
 			}

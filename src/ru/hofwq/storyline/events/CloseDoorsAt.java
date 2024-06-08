@@ -134,7 +134,7 @@ public class CloseDoorsAt implements Listener{
                 	isShedulerEnabledMessage = true;
                 }
             }
-        }.runTaskTimer(plugin, 0L, 20L);
+        }.runTaskTimer(plugin, 0L, 200L);
     }
     
     @EventHandler
